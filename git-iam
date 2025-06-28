@@ -1,0 +1,188 @@
+#!/usr/bin/env python3
+import sys
+import subprocess
+IAM_VERSION = "v1.0.0"
+
+def run_git_command(*args):
+    subprocess.run(["git", *args])
+
+def git_pr_command(*args):
+    if len(args) < 5:
+        print("❌ Argument not complete. use format: <platform> <source> <target> <title> <body>")
+        return
+
+    platform = args[0]
+    source = args[1].replace(" ", "-")
+    target = args[2]
+    title = args[3]
+    body = args[4]
+
+    if platform == "gh":
+        command = [
+            "gh", "pr", "create",
+            "--base", target,
+            "--head", source,
+            "--title", title,
+            "--body", body
+        ]
+        print(command)
+    elif platform == "glab":
+        command = [
+            "glab", "mr", "create",
+            "--source", source,
+            "--target", target,
+            "--title", title,
+            "--description", body
+        ]
+        print(command)
+    else:
+        print("❌ Platform only supported by gh(github) or glab(gitlab).")
+
+def init():
+    run_git_command("init")
+
+def create_sprint(name):
+    branch = name.replace(" ", "-")
+    run_git_command("checkout", "master")
+    run_git_command("checkout", "pull", "master")
+    run_git_command("checkout","-b", f"sprint/{branch}")
+
+def create_feature(*args):
+    if len(args) == 2 and args[0] == "sprint":
+        sprint_name = args[1].replace(" ", "-")
+        run_git_command("checkout", f"sprint/{sprint_name}")
+        run_git_command("pull", "origin" , f"sprint/{sprint_name}")
+    elif len(args) == 1:
+        feature_name = args[0].replace(" ", "-")
+        run_git_command("checkout", "-b", f"feature/{feature_name}")
+    else:
+        print("❌ Argumen tidak valid. Gunakan:\n - feature_name\n - sprint, feature_name")
+
+def create_hotfix(name):
+    branch = name.replace(" ", "-")
+    run_git_command("checkout", "master")
+    run_git_command("checkout", "pull", "origin")
+    run_git_command("checkout","-b", f"hotfix/{branch}")
+
+def create_fix(*args):
+    target_branch = args[0].replace(" ", "-") 
+    fix_branch = args[1].replace(" ", "-") 
+
+    if(target_branch != "master"):
+        run_git_command("checkout", f"{target_branch}")
+        run_git_command("checkout", "pull", "origin")
+        run_git_command("checkout", "-b", f"fix/{fix_branch}")
+    else:
+        print("❌ Fix branch not for master")
+
+def create_commit(message):
+    if len(message) > 50:
+        print("❌ Commit message max 50 characters.")
+    else:
+        run_git_command("commit", "-m", message)
+
+def help_message():
+    print("""
+git-iam is a tool to help you manage your git workflow.
+Usage: git-iam [options]
+    Init                        init the project
+    Sprint <name>               create a sprint branch from master
+    feature <name>              create a feature branch from sprint
+    release <version>           create a release branch from sprint
+    hotfix <name>               create a hotfix branch from master
+    commit <message>            create a commit
+    pr/mr                       create a pull request or merge request
+    log                         show the log of your branch
+    help                        show this help message
+    version                     show the version of git-iam
+  """)
+    
+def git_iam():
+    print("Menu Git IAM:")
+    print('1. Create your sprint')
+    print('2. Create your feature')
+    print('3. Create your hotfix')
+    print('4. Create your fix')
+    print('5. Create your commit message')
+    print('6. Create pull request or merge request')
+    print('7. show log')
+    print('8. exit')
+
+    arg = input('Input your choice: ')
+    if (arg == '1'):
+        create_sprint(input("sprint name: "))
+    elif(arg == '2'):
+        create_feature("sprint",input("Input sprint name: "))
+        create_feature(input("feature name: "))
+    elif (arg == '3'):
+        create_hotfix(input("hotfix name: "))
+    elif (arg == '4'):
+        target_branch = input("target branch: ")
+        fix_branch = input("fix branch: ")
+        create_fix(target_branch, fix_branch)
+    elif (arg == '5'):
+        create_commit(input("commit message: "))
+    elif (arg == '6'):
+        platform = input("PR platform(gh/glab): ")
+        source = input("PR source: ")
+        target = input("PR target: ")
+        title = input("PR title: ")
+        body = input("PR description: ")
+        git_pr_command(platform, source, target, title, body)
+    elif (arg == '7'):
+        run_git_command("log", "--oneline", "--graph", "--all", "--decorate")
+    elif (arg == '8'):
+        print("Goodbye!")
+        sys.exit(0)
+    else:
+        help_message()
+
+if __name__ == "__main__":
+    try:
+        if len(sys.argv) < 2:
+            git_iam()
+            sys.exit(1)
+    except KeyboardInterrupt:
+        print("\n❌ Cancelled by user (Ctrl+C).")
+        sys.exit(0)
+
+cmd = sys.argv[1]
+
+try:
+    if (cmd == 'init'):
+        init()
+    elif (cmd == 'sprint'):
+        create_sprint(input("Input sprint name: "))
+    elif (cmd == 'feature'):
+        sprint_name = input("Input sprint name: ")
+        feature_name = input("Input your feature name: ")
+        create_feature("sprint", sprint_name)
+        create_feature(feature_name)
+    elif cmd in ['help', "--help"]:
+        help_message()
+    elif cmd in ["version", "v" ,"V" ,"--version", "-V"]: 
+        print(f"git-iam version: {IAM_VERSION}")
+    elif cmd == "commit":
+        create_commit(input("Input your commit message: "))
+    elif cmd == "push":
+        run_git_command("push", "origin")
+    elif cmd == "log":
+        run_git_command("log", "--oneline", "--graph", "--all", "--decorate")
+    elif cmd == "hotfix":
+        create_hotfix(input("Input your hotfix name: "))
+    elif cmd == "fix":
+        target_branch = input("Input your target branch: ")
+        fix_branch = input("Input your fix branch: ")
+        create_fix(target_branch, fix_branch)
+    elif cmd in ["pr", "mr"]:
+        platform = input("Input your PR platform(gh/glab): ")
+        source = input("Input your PR source: ")
+        target = input("Input your PR target: ")
+        title = input("Input your PR title: ")
+        body = input("Input your PR description: ")
+        git_pr_command(platform, source, target, title, body)
+    else:
+        print('❌ Command not support')
+except KeyboardInterrupt:
+    print("\n❌ Cancelled by user (Ctrl+C).")
+    sys.exit(0)
