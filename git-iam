@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import sys
 import subprocess
-IAM_VERSION = "v1.0.0"
+IAM_VERSION = "v1.0.1"
 
 def run_git_command(*args):
     subprocess.run(["git", *args])
@@ -25,7 +25,7 @@ def git_pr_command(*args):
             "--title", title,
             "--body", body
         ]
-        print(command)
+        subprocess.run(command)
     elif platform == "glab":
         command = [
             "glab", "mr", "create",
@@ -34,7 +34,7 @@ def git_pr_command(*args):
             "--title", title,
             "--description", body
         ]
-        print(command)
+        subprocess.run(command)
     else:
         print("❌ Platform only supported by gh(github) or glab(gitlab).")
 
@@ -44,8 +44,8 @@ def init():
 def create_sprint(name):
     branch = name.replace(" ", "-")
     run_git_command("checkout", "master")
-    run_git_command("checkout", "pull", "master")
-    run_git_command("checkout","-b", f"sprint/{branch}")
+    run_git_command("pull", "origin", "master")
+    run_git_command("checkout", "-b", f"sprint/{branch}")
 
 def create_feature(*args):
     if len(args) == 2 and args[0] == "sprint":
@@ -61,7 +61,7 @@ def create_feature(*args):
 def create_hotfix(name):
     branch = name.replace(" ", "-")
     run_git_command("checkout", "master")
-    run_git_command("checkout", "pull", "origin")
+    run_git_command("pull", "origin")
     run_git_command("checkout","-b", f"hotfix/{branch}")
 
 def create_fix(*args):
@@ -70,7 +70,7 @@ def create_fix(*args):
 
     if(target_branch != "master"):
         run_git_command("checkout", f"{target_branch}")
-        run_git_command("checkout", "pull", "origin")
+        run_git_command("pull", "origin")
         run_git_command("checkout", "-b", f"fix/{fix_branch}")
     else:
         print("❌ Fix branch not for master")
