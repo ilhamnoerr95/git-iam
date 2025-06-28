@@ -6,6 +6,32 @@ IAM_VERSION = "v1.0.1"
 def run_git_command(*args):
     subprocess.run(["git", *args])
 
+def run_git_push(*args):
+    result = subprocess.run(["git"] + list(args), capture_output=True, text=True)
+    if result.returncode != 0:
+        print(f"❌ Error: {result.stderr.strip()}")
+    else:
+        print(result.stdout.strip())
+
+def get_current_branch():
+    result = subprocess.run(["git", "rev-parse", "--abbrev-ref", "HEAD"], capture_output=True, text=True)
+    return result.stdout.strip()
+
+def is_branch_tracked(branch_name):
+    result = subprocess.run(["git", "rev-parse", "--symbolic-full-name", "--verify", f"{branch_name}@{{u}}"],
+                            capture_output=True, text=True)
+    return result.returncode == 0
+
+def safe_git_push():
+    branch = get_current_branch()
+    print(f"🚀 Current branch: {branch}")
+    if is_branch_tracked(branch):
+        print(f"📡 Branch '{branch}' is already tracked. Pushing...")
+        run_git_push("push")
+    else:
+        print(f"🔧 Branch '{branch}' is not tracked. Setting upstream and pushing...")
+        run_git_push("push", "-u", "origin", branch)
+
 def git_pr_command(*args):
     if len(args) < 5:
         print("❌ Argument not complete. use format: <platform> <source> <target> <title> <body>")
@@ -22,8 +48,8 @@ def git_pr_command(*args):
             "gh", "pr", "create",
             "--base", target,
             "--head", source,
-            "--title", title,
-            "--body", body
+            "--title", f"{title}",
+            "--body", f"{body}"
         ]
         subprocess.run(command)
     elif platform == "glab":
@@ -166,10 +192,7 @@ try:
     elif cmd == "commit":
         create_commit(input("Input your commit message: "))
     elif cmd == "push":
-        if len(sys.argv) > 2:
-            first_push = sys.argv[2].replace(" ", "-")
-            run_git_command("push","-u", "origin", first_push)
-        run_git_command("push", "-u" , "origin")
+        safe_git_push()
     elif cmd == "log":
         run_git_command("log", "--oneline", "--graph", "--all", "--decorate")
     elif cmd == "hotfix":
