@@ -20,7 +20,7 @@
 - push to remote
 - sprint-finish & feature-finish for fast-forward without merge-request or pull request and automatically delete branch local and remote
 
-> [!note] **Note:** This tool is designed to work with GitHub and GitLab. If you are using a different version of Git or a different version of the Git CLI, you may need to adjust the commands accordingly.
+> [!note] > **Note:** This tool is designed to work with GitHub and GitLab. If you are using a different version of Git or a different version of the Git CLI, you may need to adjust the commands accordingly.
 
 ---
 
@@ -51,6 +51,60 @@ pip3 --version
 ```bash
 curl -o /usr/local/bin/git-iam https://raw.githubusercontent.com/ilhamnoerr95/git-iam/master/git-iam
 chmod +x /usr/local/bin/git-iam
+```
+
+3. Skip this step if you already have github/gitlab cli
+
+```bash
+
+# install git cli
+# macOS install if not install yet
+brew update
+brew install gh
+# Then Authentication
+gh auth login
+
+# install gitlab cli
+# macOS install if not install yet
+brew update
+brew install glab
+# Then Authentication
+glab auth login
+
+# -------------------------
+# install in linux
+# install `gh` in ubuntu/Debian
+curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg \
+  && sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
+
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | \
+  sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+
+sudo apt update
+sudo apt install gh
+
+# install gh in Fedola /RHEL/ CentOs
+sudo dnf install 'dnf-command(config-manager)'
+sudo dnf config-manager --add-repo https://cli.github.com/packages/rpm/gh-cli.repo
+sudo dnf install gh
+
+#---------------
+# install glab(gitlab CLI) in ubuntu/Debian:
+curl -s https://api.github.com/repos/profclems/glab/releases/latest \
+| grep "browser_download_url.*deb" | cut -d '"' -f 4 | wget -i -
+
+sudo dpkg -i glab_*.deb
+
+# install glab in Fedora/ RPM-based:
+curl -s https://api.github.com/repos/profclems/glab/releases/latest \
+| grep "browser_download_url.*rpm" | cut -d '"' -f 4 | wget -i -
+
+sudo rpm -i glab_*.rpm
+
+# check version
+gh --version
+glab --version
+
 ```
 
 ## 📘 Example Workflows
