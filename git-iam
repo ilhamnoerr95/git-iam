@@ -169,7 +169,7 @@ try:
         if len(sys.argv) > 2:
             first_push = sys.argv[2].replace(" ", "-")
             run_git_command("push","-u", "origin", first_push)
-        run_git_command("push", "origin")
+        run_git_command("push", "-u" , "origin")
     elif cmd == "log":
         run_git_command("log", "--oneline", "--graph", "--all", "--decorate")
     elif cmd == "hotfix":
