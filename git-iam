@@ -168,9 +168,7 @@ try:
     elif cmd == "push":
         if len(sys.argv) > 2:
             first_push = sys.argv[2].replace(" ", "-")
-            run_git_command("push", "origin", first_push)
-        # else:
-        #      print("❌ Error: Harap masukkan nama branch untuk push. Contoh:\n   git-iam push 'feature/login-page'")
+            run_git_command("push","-u", "origin", first_push)
         run_git_command("push", "origin")
     elif cmd == "log":
         run_git_command("log", "--oneline", "--graph", "--all", "--decorate")
