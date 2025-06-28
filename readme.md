@@ -1,6 +1,6 @@
 # git-iam
 
-**Version: v1.0.0**
+**Version: v1.1.1**
 
 `git-iam` is a custom CLI helper tool built in Python to simplify and standardize your Git branching workflow. It provides commands for creating sprints, features, hotfixes, fixes, commits, and PR/MR operations using either GitHub CLI (`gh`) or GitLab CLI (`glab`).
 
@@ -12,11 +12,15 @@
 - Create sprint branches (take from master)
 - Create feature branches (take from sprint)
 - Create hotfix (take from master)
-- fix branches (take from anywhere except mater)
+- create fix branches (take from anywhere except mater)
 - Commit with validation
 - Create Pull Requests (PR) or Merge Requests (MR) (only for github or gitlab)
 - Visualize commit history
 - Interactive CLI mode
+- push to remote
+- sprint-finish & feature-finish for fast-forward without merge-request or pull request and automatically delete branch local and remote
+
+> [!note] **Note:** This tool is designed to work with GitHub and GitLab. If you are using a different version of Git or a different version of the Git CLI, you may need to adjust the commands accordingly.
 
 ---
 
@@ -62,15 +66,23 @@ git-iam hotfix # Create hotfix branch from master by default
 git-iam fix # Create fix branch not from master
 git-iam commit # Input message (max 50 charactesrs)
 git-iam pr  ##  Follow input prompts for PR creation
+git-iam push ## push to remote
 git-iam log # Interactive log visualization
+git-iam sprint-finish # finish sprint branch after merged into development, fast-forward to development without Pull request or merge request
+git-iam feature-finish # finish feature branch after merged into sprint, fast-forward to sprint without Pull request or merge request
 ```
+
+> [!note]
+> sprint-finish and feature-finish are only for sprint and feature branch respectively, it will not create Pull request or merge request.
+> it will ask prompt input for the target of branch that want to merge.
+> if you want to create Pull request or merge request, use `git-iam pr` instead.
 
 ## The branching rule follows a structured Git-iam:
 
 1. Every sprint branch is created from the master branch.
 2. Each feature branch must be created from its corresponding sprint branch.
 3. After development, all feature branches are merged back into the sprint.
-4. Once a sprint is complete, the sprint branch is merged into the development branch.
-5. Finally, the development branch is merged into master after final review and testing.
+4. Once a sprint is complete, the sprint branch is merged into the development/anything branch naming you want.
+5. Finally, the development/anything branch is merged into master after final review and testing.
 
 ✅ This ensures a clean and traceable workflow from feature development to production-ready code.

@@ -1,12 +1,9 @@
 #!/usr/bin/env python3
 import sys
 import subprocess
-IAM_VERSION = "v1.0.1"
+IAM_VERSION = "v1.1.1"
 
 def run_git_command(*args):
-    subprocess.run(["git", *args])
-
-def run_git_push(*args):
     result = subprocess.run(["git"] + list(args), capture_output=True, text=True)
     if result.returncode != 0:
         print(f"❌ Error: {result.stderr.strip()}")
@@ -27,10 +24,65 @@ def safe_git_push():
     print(f"🚀 Current branch: {branch}")
     if is_branch_tracked(branch):
         print(f"📡 Branch '{branch}' is already tracked. Pushing...")
-        run_git_push("push")
+        run_git_command("push")
+        print(f"✅ Branch '{branch}' completed pushed.")
     else:
         print(f"🔧 Branch '{branch}' is not tracked. Setting upstream and pushing...")
-        run_git_push("push", "-u", "origin", branch)
+        run_git_command("push", "-u", "origin", branch)
+
+def sprint_finish(branch_target):
+    current_branch = get_current_branch()
+
+    if not current_branch.startswith("sprint/"):
+        print("❌ You must stay at 'sprint/*' for finish this sprint.")
+        sys.exit(1)
+
+    print(f"🔄 Finishing sprint: {current_branch}")
+
+    # Checkout ke development
+    run_git_command("checkout", branch_target)
+
+    # Pull update development
+    run_git_command("pull", "origin", branch_target)
+
+    # Merge sprint ke development
+    run_git_command("merge", "--no-ff", current_branch)
+
+    # Push hasil merge
+    run_git_command("push", "origin", branch_target)
+
+    # Hapus branch lokal
+    run_git_command("branch", "-d", current_branch)
+
+    # Hapus branch remote
+    run_git_command("push", "origin", "--delete", current_branch)
+
+    print(f"✅ Sprint {current_branch} finished merged into {branch_target} as well removed from local & remote.")
+
+def feature_finish(branch_target):
+    current_branch = get_current_branch()
+
+    if not current_branch.startswith("feature/"):
+        print("❌ You need to be in branch 'feature/*' for complete the feature.")
+        sys.exit(1)
+
+    print(f"🚀 finishing the feature: {current_branch}")
+
+    # Checkout ke develop
+    run_git_command("checkout", branch_target)
+    run_git_command("pull", "origin", branch_target)
+
+    # Merge feature ke develop
+    run_git_command("merge", "--no-ff", current_branch)
+
+    # Push hasil merge
+    run_git_command("push", "origin", branch_target)
+
+    # Hapus branch lokal & remote
+    run_git_command("branch", "-D", current_branch)
+    run_git_command("push", "origin", "--delete", current_branch)
+
+    print(f"✅ Feature {current_branch} finished and merged to '{branch_target}' as well removed from local & remote..")
 
 def git_pr_command(*args):
     if len(args) < 5:
@@ -39,9 +91,13 @@ def git_pr_command(*args):
 
     platform = args[0]
     source = args[1].replace(" ", "-")
-    target = args[2]
+    target = args[2].replace(" ", "-")
     title = args[3]
     body = args[4]
+    print(f"🚀 Creating PR for {platform} from {source} to {target} with title {title}")
+
+     # Pull update target
+    run_git_command("pull", "origin", source)
 
     if platform == "gh":
         command = [
@@ -51,6 +107,7 @@ def git_pr_command(*args):
             "--title", f"{title}",
             "--body", f"{body}"
         ]
+
         subprocess.run(command)
     elif platform == "glab":
         command = [
@@ -68,36 +125,64 @@ def init():
     run_git_command("init")
 
 def create_sprint(name):
-    branch = name.replace(" ", "-")
+    branch = name.strip().replace(" ", "-")  # Hilangkan spasi awal/akhir, ganti spasi jadi "-"
+    
+    print(f"🚀 Make new sprint: sprint/{branch}")
+
+    # Checkout ke master dan update dulu
     run_git_command("checkout", "master")
     run_git_command("pull", "origin", "master")
+
+    # Buat branch sprint baru dari master
     run_git_command("checkout", "-b", f"sprint/{branch}")
+
+    # Push branch sprint ke remote
+    run_git_command("push", "-u", "origin", f"sprint/{branch}")
+
 
 def create_feature(*args):
     if len(args) == 2 and args[0] == "sprint":
         sprint_name = args[1].replace(" ", "-")
+        print(f"🚀 pull sprint: sprint/{sprint_name}")
+
         run_git_command("checkout", f"sprint/{sprint_name}")
         run_git_command("pull", "origin" , f"sprint/{sprint_name}")
     elif len(args) == 1:
         feature_name = args[0].replace(" ", "-")
+        print(f"🚀 make feature branch: feature/{feature_name}")
+
         run_git_command("checkout", "-b", f"feature/{feature_name}")
+
+        # Push branch feature ke remote
+        run_git_command("push", "-u", "origin", f"feature/{feature_name}")
     else:
         print("❌ Argumen tidak valid. Gunakan:\n - feature_name\n - sprint, feature_name")
 
 def create_hotfix(name):
     branch = name.replace(" ", "-")
+    print(f"🔥 Make new hotfix: hotfix/{branch}")
+
+    # Checkout ke master dan update dulu
     run_git_command("checkout", "master")
     run_git_command("pull", "origin")
+
+    # Buat branch hotfix baru dari master
     run_git_command("checkout","-b", f"hotfix/{branch}")
+
+    # Push branch hotfix ke remote
+    run_git_command("push", "-u", "origin", f"hotfix/{branch}")
 
 def create_fix(*args):
     target_branch = args[0].replace(" ", "-") 
     fix_branch = args[1].replace(" ", "-") 
 
     if(target_branch != "master"):
+        print(f"🔥 Make new fix branch: fix/{fix_branch}")
         run_git_command("checkout", f"{target_branch}")
         run_git_command("pull", "origin")
         run_git_command("checkout", "-b", f"fix/{fix_branch}")
+        run_git_command("push", "-u", "origin", f"fix/{fix_branch}")
+
     else:
         print("❌ Fix branch not for master")
 
@@ -114,8 +199,9 @@ Usage: git-iam [options]
     Init                        init the project
     Sprint <name>               create a sprint branch from master
     feature <name>              create a feature branch from sprint
-    release <version>           create a release branch from sprint
     hotfix <name>               create a hotfix branch from master
+    sprint-finish               sprint finish, delete branch sprint in local and remote
+    feature-finish               sprint finish, delete branch sprint in local and remote
     commit <message>            create a commit
     pr/mr                       create a pull request or merge request
     log                         show the log of your branch
@@ -133,22 +219,24 @@ def git_iam():
     print('5. Create your commit message')
     print('6. Create pull request or merge request')
     print('7. show log')
-    print('8. exit')
+    print('8. Sprint-finish')
+    print('9. Feature-finish')
+    print('10. exit')
 
     arg = input('Input your choice: ')
     if (arg == '1'):
-        create_sprint(input("sprint name: "))
+        create_sprint(input("sprint name[sprint/]: "))
     elif(arg == '2'):
-        create_feature("sprint",input("Input sprint name: "))
-        create_feature(input("feature name: "))
+        create_feature("sprint",input("from sprint name[sprint/]: "))
+        create_feature(input("feature name[feature/]: "))
     elif (arg == '3'):
-        create_hotfix(input("hotfix name: "))
+        create_hotfix(input("hotfix name[hotfix/]: "))
     elif (arg == '4'):
         target_branch = input("target branch: ")
-        fix_branch = input("fix branch: ")
+        fix_branch = input("fix branch[fix/]: ")
         create_fix(target_branch, fix_branch)
     elif (arg == '5'):
-        create_commit(input("commit message: "))
+        create_commit(input("commit message[max-50 characters]: "))
     elif (arg == '6'):
         platform = input("PR platform(gh/glab): ")
         source = input("PR source: ")
@@ -159,6 +247,12 @@ def git_iam():
     elif (arg == '7'):
         run_git_command("log", "--oneline", "--graph", "--all", "--decorate")
     elif (arg == '8'):
+        target_branch = input("Input your target branch: ")
+        sprint_finish(target_branch)
+    elif (arg == '9'):
+        target_branch = input("Input your target branch: ")
+        feature_finish(target_branch)
+    elif (arg == '10'):
         print("Goodbye!")
         sys.exit(0)
     else:
@@ -179,10 +273,10 @@ try:
     if (cmd == 'init'):
         init()
     elif (cmd == 'sprint'):
-        create_sprint(input("Input sprint name: "))
+        create_sprint(input("Input sprint name[sprint/]: "))
     elif (cmd == 'feature'):
-        sprint_name = input("Input sprint name: ")
-        feature_name = input("Input your feature name: ")
+        sprint_name = input("Input from sprint name[sprint/]: ")
+        feature_name = input("Input your feature name[feature/]: ")
         create_feature("sprint", sprint_name)
         create_feature(feature_name)
     elif cmd in ['help', "--help"]:
@@ -190,16 +284,22 @@ try:
     elif cmd in ["version", "v" ,"V" ,"--version", "-V"]: 
         print(f"git-iam version: {IAM_VERSION}")
     elif cmd == "commit":
-        create_commit(input("Input your commit message: "))
+        create_commit(input("commit message[max-50 characters]: "))
     elif cmd == "push":
         safe_git_push()
     elif cmd == "log":
         run_git_command("log", "--oneline", "--graph", "--all", "--decorate")
+    elif cmd == "sprint-finish":
+        target_branch = input("Input your target branch: ")
+        sprint_finish(target_branch)
+    elif cmd == "feature-finish":
+        target_branch = input("Input your target branch: ")
+        feature_finish(target_branch)
     elif cmd == "hotfix":
-        create_hotfix(input("Input your hotfix name: "))
+        create_hotfix(input("Input your hotfix name[hofix/]: "))
     elif cmd == "fix":
         target_branch = input("Input your target branch: ")
-        fix_branch = input("Input your fix branch: ")
+        fix_branch = input("Input your fix branch[fix/]: ")
         create_fix(target_branch, fix_branch)
     elif cmd in ["pr", "mr"]:
         platform = input("Input your PR platform(gh/glab): ")
