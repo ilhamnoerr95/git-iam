@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import sys
 import subprocess
-IAM_VERSION = "v1.1.1"
+IAM_VERSION = "v1.1.2"
 
 def run_git_command(*args):
     result = subprocess.run(["git"] + list(args), capture_output=True, text=True)
@@ -38,26 +38,25 @@ def sprint_finish(branch_target):
         sys.exit(1)
 
     print(f"🔄 Finishing sprint: {current_branch}")
-
-    # Checkout ke development
+    # Checkout ke branch_target
     run_git_command("checkout", branch_target)
 
-    # Pull update development
+    # Pull update branch_target
     run_git_command("pull", "origin", branch_target)
-
-    # Merge sprint ke development
+    
+    # Merge current_Branch(sprint_branch) to branch_target
     run_git_command("merge", "--no-ff", current_branch)
 
     # Push hasil merge
     run_git_command("push", "origin", branch_target)
 
-    # Hapus branch lokal
-    run_git_command("branch", "-d", current_branch)
+    if (branch_target == "master"):
+        # Hapus branch lokal
+        run_git_command("branch", "-d", current_branch)
 
-    # Hapus branch remote
-    run_git_command("push", "origin", "--delete", current_branch)
-
-    print(f"✅ Sprint {current_branch} finished merged into {branch_target} as well removed from local & remote.")
+        # Hapus branch remote
+        run_git_command("push", "origin", "--delete", current_branch)
+        print(f"✅ Sprint {current_branch} finished merged into {branch_target} as well removed from local & remote.")
 
 def feature_finish(branch_target):
     current_branch = get_current_branch()
