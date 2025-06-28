@@ -1,10 +1,36 @@
 #!/usr/bin/env python3
 import sys
 import subprocess
-IAM_VERSION = "v1.0.0"
+IAM_VERSION = "v1.0.1"
 
 def run_git_command(*args):
     subprocess.run(["git", *args])
+
+def run_git_push(*args):
+    result = subprocess.run(["git"] + list(args), capture_output=True, text=True)
+    if result.returncode != 0:
+        print(f"❌ Error: {result.stderr.strip()}")
+    else:
+        print(result.stdout.strip())
+
+def get_current_branch():
+    result = subprocess.run(["git", "rev-parse", "--abbrev-ref", "HEAD"], capture_output=True, text=True)
+    return result.stdout.strip()
+
+def is_branch_tracked(branch_name):
+    result = subprocess.run(["git", "rev-parse", "--symbolic-full-name", "--verify", f"{branch_name}@{{u}}"],
+                            capture_output=True, text=True)
+    return result.returncode == 0
+
+def safe_git_push():
+    branch = get_current_branch()
+    print(f"🚀 Current branch: {branch}")
+    if is_branch_tracked(branch):
+        print(f"📡 Branch '{branch}' is already tracked. Pushing...")
+        run_git_push("push")
+    else:
+        print(f"🔧 Branch '{branch}' is not tracked. Setting upstream and pushing...")
+        run_git_push("push", "-u", "origin", branch)
 
 def git_pr_command(*args):
     if len(args) < 5:
@@ -22,10 +48,10 @@ def git_pr_command(*args):
             "gh", "pr", "create",
             "--base", target,
             "--head", source,
-            "--title", title,
-            "--body", body
+            "--title", f"{title}",
+            "--body", f"{body}"
         ]
-        print(command)
+        subprocess.run(command)
     elif platform == "glab":
         command = [
             "glab", "mr", "create",
@@ -34,7 +60,7 @@ def git_pr_command(*args):
             "--title", title,
             "--description", body
         ]
-        print(command)
+        subprocess.run(command)
     else:
         print("❌ Platform only supported by gh(github) or glab(gitlab).")
 
@@ -44,8 +70,8 @@ def init():
 def create_sprint(name):
     branch = name.replace(" ", "-")
     run_git_command("checkout", "master")
-    run_git_command("checkout", "pull", "master")
-    run_git_command("checkout","-b", f"sprint/{branch}")
+    run_git_command("pull", "origin", "master")
+    run_git_command("checkout", "-b", f"sprint/{branch}")
 
 def create_feature(*args):
     if len(args) == 2 and args[0] == "sprint":
@@ -61,7 +87,7 @@ def create_feature(*args):
 def create_hotfix(name):
     branch = name.replace(" ", "-")
     run_git_command("checkout", "master")
-    run_git_command("checkout", "pull", "origin")
+    run_git_command("pull", "origin")
     run_git_command("checkout","-b", f"hotfix/{branch}")
 
 def create_fix(*args):
@@ -70,7 +96,7 @@ def create_fix(*args):
 
     if(target_branch != "master"):
         run_git_command("checkout", f"{target_branch}")
-        run_git_command("checkout", "pull", "origin")
+        run_git_command("pull", "origin")
         run_git_command("checkout", "-b", f"fix/{fix_branch}")
     else:
         print("❌ Fix branch not for master")
@@ -94,6 +120,7 @@ Usage: git-iam [options]
     pr/mr                       create a pull request or merge request
     log                         show the log of your branch
     help                        show this help message
+    push                        push branch to remote
     version                     show the version of git-iam
   """)
     
@@ -165,7 +192,7 @@ try:
     elif cmd == "commit":
         create_commit(input("Input your commit message: "))
     elif cmd == "push":
-        run_git_command("push", "origin")
+        safe_git_push()
     elif cmd == "log":
         run_git_command("log", "--oneline", "--graph", "--all", "--decorate")
     elif cmd == "hotfix":
