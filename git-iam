@@ -94,6 +94,7 @@ Usage: git-iam [options]
     pr/mr                       create a pull request or merge request
     log                         show the log of your branch
     help                        show this help message
+    push                        push branch to remote
     version                     show the version of git-iam
   """)
     
@@ -165,6 +166,11 @@ try:
     elif cmd == "commit":
         create_commit(input("Input your commit message: "))
     elif cmd == "push":
+        if len(sys.argv) > 2:
+            first_push = sys.argv[2].replace(" ", "-")
+            run_git_command("push", "origin", first_push)
+        # else:
+        #      print("❌ Error: Harap masukkan nama branch untuk push. Contoh:\n   git-iam push 'feature/login-page'")
         run_git_command("push", "origin")
     elif cmd == "log":
         run_git_command("log", "--oneline", "--graph", "--all", "--decorate")
