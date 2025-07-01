@@ -1,6 +1,6 @@
 # git-iam
 
-**Version: v1.1.2**
+**Version: v1.1.3**
 
 `git-iam` is a custom CLI helper tool built in Python to simplify and standardize your Git branching workflow. It provides commands for creating sprints, features, hotfixes, fixes, commits, and PR/MR operations using either GitHub CLI (`gh`) or GitLab CLI (`glab`).
 
