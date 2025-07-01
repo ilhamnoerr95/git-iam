@@ -35,7 +35,7 @@ def sprint_finish(branch_target):
 
     if not current_branch.startswith("sprint/"):
         print("❌ You must stay at 'sprint/*' for finish this sprint.")
-        sys.exit(1)
+        sys.exit(0)
 
     print(f"🔄 Finishing sprint: {current_branch}")
     # Checkout ke branch_target
@@ -64,11 +64,11 @@ def feature_finish(branch_target):
 
     if not current_branch.startswith("feature/"):
         print("❌ You need to be in branch 'feature/*' for complete the feature.")
-        sys.exit(1)
+        sys.exit(0)
 
     if not branch_target.startswith("sprint/"):
         print("❌ Target branch must be 'sprint/*' for finish the feature.")
-        sys.exit(1)
+        sys.exit(0)
 
     print(f"🚀 finishing the feature: {current_branch}")
     
