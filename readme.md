@@ -110,10 +110,10 @@ glab --version
 
 4. Update Version
 
-````bash
+```bash
 curl -fsSL -o /usr/local/bin/git-iam https://raw.githubusercontent.com/ilhamnoerr95/git-iam/master/git-iam
 chmod +x /usr/local/bin/git-iam
-
+```
 
 ## 📘 Example Workflows
 
@@ -132,7 +132,7 @@ git-iam push ## push to remote
 git-iam log # Interactive log visualization
 git-iam sprint-finish # finish sprint branch after merged into development, fast-forward to development without Pull request or merge request
 git-iam feature-finish # finish feature branch after merged into sprint, fast-forward to sprint without Pull request or merge request
-````
+```
 
 > [!note]
 > sprint-finish and feature-finish are only for sprint and feature branch respectively, it will not create Pull request or merge request.
