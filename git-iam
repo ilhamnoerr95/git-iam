@@ -35,7 +35,7 @@ def sprint_finish(branch_target):
 
     if not current_branch.startswith("sprint/"):
         print("❌ You must stay at 'sprint/*' for finish this sprint.")
-        sys.exit(1)
+        sys.exit(0)
 
     print(f"🔄 Finishing sprint: {current_branch}")
     # Checkout ke branch_target
@@ -49,6 +49,7 @@ def sprint_finish(branch_target):
 
     # Push hasil merge
     run_git_command("push", "origin", branch_target)
+    print(f"✅ {branch_target} already pushed")
 
     if (branch_target == "master"):
         # Hapus branch lokal
@@ -63,10 +64,14 @@ def feature_finish(branch_target):
 
     if not current_branch.startswith("feature/"):
         print("❌ You need to be in branch 'feature/*' for complete the feature.")
-        sys.exit(1)
+        sys.exit(0)
+
+    if not branch_target.startswith("sprint/"):
+        print("❌ Target branch must be 'sprint/*' for finish the feature.")
+        sys.exit(0)
 
     print(f"🚀 finishing the feature: {current_branch}")
-
+    
     # Checkout ke develop
     run_git_command("checkout", branch_target)
     run_git_command("pull", "origin", branch_target)
@@ -137,6 +142,8 @@ def create_sprint(name):
 
     # Push branch sprint ke remote
     run_git_command("push", "-u", "origin", f"sprint/{branch}")
+    print(f"✅ sprint/{branch} already pushed")
+
 
 
 def create_feature(*args):
@@ -154,6 +161,8 @@ def create_feature(*args):
 
         # Push branch feature ke remote
         run_git_command("push", "-u", "origin", f"feature/{feature_name}")
+        print(f"✅ feature/{feature_name} successfully pushed")
+
     else:
         print("❌ Argumen tidak valid. Gunakan:\n - feature_name\n - sprint, feature_name")
 
@@ -170,6 +179,8 @@ def create_hotfix(name):
 
     # Push branch hotfix ke remote
     run_git_command("push", "-u", "origin", f"hotfix/{branch}")
+    print(f"✅ hotfix/{branch} successfully pushed to remote")
+
 
 def create_fix(*args):
     target_branch = args[0].replace(" ", "-") 
@@ -185,11 +196,28 @@ def create_fix(*args):
     else:
         print("❌ Fix branch not for master")
 
-def create_commit(message):
+def create_commit(title, message):
+    title_map = {
+        "1": "Feature",
+        "2": "Sprint",
+        "3": "Hotfix",
+        "4": "Fix",
+        "5": "Merge",
+        "6": "Release"
+    }
+
     if len(message) > 50:
-        print("❌ Commit message max 50 characters.")
-    else:
-        run_git_command("commit", "-m", message)
+        print("❌ Commit message maksimal 50 karakter.")
+        return
+
+    # Gunakan mapping jika input angka, atau tetap pakai langsung jika sudah valid
+    real_title = title_map.get(str(title), title if title in title_map.values() else None)
+
+    if not real_title:
+        print("❌ Invalid title. Gunakan keyword atau nomor 1–6.")
+        return
+
+    run_git_command("commit", "-m", f"[{real_title}] : {message}")
 
 def help_message():
     print("""
@@ -199,8 +227,8 @@ Usage: git-iam [options]
     Sprint <name>               create a sprint branch from master
     feature <name>              create a feature branch from sprint
     hotfix <name>               create a hotfix branch from master
-    sprint-finish               sprint finish, delete branch sprint in local and remote
-    feature-finish               sprint finish, delete branch sprint in local and remote
+    sprint-finish               sprint finish, delete branch sprint in local and remote (-ff, only delete when merge to master)
+    feature-finish              feature finish, delete branch feature in local and remote (-ff, only merge to sprint and removed)
     commit <message>            create a commit
     pr/mr                       create a pull request or merge request
     log                         show the log of your branch
@@ -210,7 +238,7 @@ Usage: git-iam [options]
   """)
     
 def git_iam():
-    print("Menu Git IAM:")
+    print("\n🎯 Menu Git IAM: ")
     print('1. Create your sprint')
     print('2. Create your feature')
     print('3. Create your hotfix')
@@ -222,7 +250,7 @@ def git_iam():
     print('9. Feature-finish')
     print('10. exit')
 
-    arg = input('Input your choice: ')
+    arg = input('👉 Input your choice [1-10]: ')
     if (arg == '1'):
         create_sprint(input("sprint name[sprint/]: "))
     elif(arg == '2'):
@@ -235,6 +263,7 @@ def git_iam():
         fix_branch = input("fix branch[fix/]: ")
         create_fix(target_branch, fix_branch)
     elif (arg == '5'):
+        create_commit(input("title message[]: "))
         create_commit(input("commit message[max-50 characters]: "))
     elif (arg == '6'):
         platform = input("PR platform(gh/glab): ")
@@ -252,7 +281,7 @@ def git_iam():
         target_branch = input("Input your target branch: ")
         feature_finish(target_branch)
     elif (arg == '10'):
-        print("Goodbye!")
+        print("👋 Goodbye!")
         sys.exit(0)
     else:
         help_message()
@@ -283,7 +312,16 @@ try:
     elif cmd in ["version", "v" ,"V" ,"--version", "-V"]: 
         print(f"git-iam version: {IAM_VERSION}")
     elif cmd == "commit":
-        create_commit(input("commit message[max-50 characters]: "))
+        print("\n🎯 Commit Title: ")
+        print('1. Feature')
+        print('2. Sprint')
+        print('3. Hotfix')
+        print('4. Fix')
+        print('5. Merge')
+        print('6. Release')
+        title = input("👉 Input your commit title[1-6]: ")
+        msg = input("commit message[max-50 characters]: ")
+        create_commit(title, msg)
     elif cmd == "push":
         safe_git_push()
     elif cmd == "log":
