@@ -66,8 +66,12 @@ def feature_finish(branch_target):
         print("❌ You need to be in branch 'feature/*' for complete the feature.")
         sys.exit(1)
 
-    print(f"🚀 finishing the feature: {current_branch}")
+    if not branch_target.startswith("sprint/"):
+        print("❌ Target branch must be 'sprint/*' for finish the feature.")
+        sys.exit(1)
 
+    print(f"🚀 finishing the feature: {current_branch}")
+    
     # Checkout ke develop
     run_git_command("checkout", branch_target)
     run_git_command("pull", "origin", branch_target)
