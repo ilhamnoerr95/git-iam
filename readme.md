@@ -1,6 +1,6 @@
 # git-iam
 
-**Version: v1.1.3**
+**Version: v1.1.4**
 
 `git-iam` is a custom CLI helper tool built in Python to simplify and standardize your Git branching workflow. It provides commands for creating sprints, features, hotfixes, fixes, commits, and PR/MR operations using either GitHub CLI (`gh`) or GitLab CLI (`glab`).
 
@@ -20,7 +20,8 @@
 - push to remote
 - sprint-finish & feature-finish for fast-forward without merge-request or pull request and automatically delete branch local and remote
 
-> [!note] > **Note:** This tool is designed to work with GitHub and GitLab. If you are using a different version of Git or a different version of the Git CLI, you may need to adjust the commands accordingly.
+> [!note]
+> This tool is designed to work with GitHub and GitLab. If you are using a different version of Git or a different version of the Git CLI, you may need to adjust the commands accordingly.
 
 ---
 
@@ -107,6 +108,13 @@ glab --version
 
 ```
 
+4. Update Version
+
+````bash
+curl -fsSL -o /usr/local/bin/git-iam https://raw.githubusercontent.com/ilhamnoerr95/git-iam/master/git-iam
+chmod +x /usr/local/bin/git-iam
+
+
 ## 📘 Example Workflows
 
 Every command will be display prompt inputs when needed.
@@ -124,7 +132,7 @@ git-iam push ## push to remote
 git-iam log # Interactive log visualization
 git-iam sprint-finish # finish sprint branch after merged into development, fast-forward to development without Pull request or merge request
 git-iam feature-finish # finish feature branch after merged into sprint, fast-forward to sprint without Pull request or merge request
-```
+````
 
 > [!note]
 > sprint-finish and feature-finish are only for sprint and feature branch respectively, it will not create Pull request or merge request.
