@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import sys
 import subprocess
-IAM_VERSION = "v1.1.4"
+IAM_VERSION = "v1.1.5"
 
 def run_git_command(*args):
     result = subprocess.run(["git"] + list(args), capture_output=True, text=True)
@@ -144,8 +144,6 @@ def create_sprint(name):
     run_git_command("push", "-u", "origin", f"sprint/{branch}")
     print(f"✅ sprint/{branch} already pushed")
 
-
-
 def create_feature(*args):
     if len(args) == 2 and args[0] == "sprint":
         sprint_name = args[1].replace(" ", "-")
@@ -188,7 +186,7 @@ def create_fix(*args):
 
     if(target_branch != "master"):
         print(f"🔥 Make new fix branch: fix/{fix_branch}")
-        run_git_command("checkout", f"{target_branch}")
+        run_git_command("checkout", target_branch)
         run_git_command("pull", "origin")
         run_git_command("checkout", "-b", f"fix/{fix_branch}")
         run_git_command("push", "-u", "origin", f"fix/{fix_branch}")
@@ -223,18 +221,19 @@ def help_message():
     print("""
 git-iam is a tool to help you manage your git workflow.
 Usage: git-iam [options]
-    Init                        init the project
-    Sprint <name>               create a sprint branch from master
-    feature <name>              create a feature branch from sprint
-    hotfix <name>               create a hotfix branch from master
-    sprint-finish               sprint finish, delete branch sprint in local and remote (-ff, only delete when merge to master)
-    feature-finish              feature finish, delete branch feature in local and remote (-ff, only merge to sprint and removed)
-    commit <message>            create a commit
-    pr/mr                       create a pull request or merge request
-    log                         show the log of your branch
-    help                        show this help message
-    push                        push branch to remote
-    version                     show the version of git-iam
+    Init                                init the project
+    Sprint <name>                       create a sprint branch from master
+    feature <name>                      create a feature branch from sprint
+    hotfix <name>                       create a hotfix branch from master
+    fix <target_branch> <fix_branch>    create a fix branch from target_branch
+    sprint-finish                       sprint finish, delete branch sprint in local and remote (-ff, only delete when merge to master)
+    feature-finish                      feature finish, delete branch feature in local and remote (-ff, only merge to sprint and removed)
+    commit <message>                    create a commit
+    pr/mr                               create a pull request or merge request
+    log                                 show the log of your branch
+    help                                show this help message
+    push                                push branch to remote
+    version                             show the version of git-iam
   """)
     
 def git_iam():
