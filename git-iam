@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import sys
 import subprocess
-IAM_VERSION = "v1.1.5"
+IAM_VERSION = "v1.1.6"
 
 def run_git_command(*args):
     result = subprocess.run(["git"] + list(args), capture_output=True, text=True)
@@ -248,6 +248,7 @@ def git_iam():
     print('8. Sprint-finish')
     print('9. Feature-finish')
     print('10. exit')
+    print('11. help')
 
     arg = input('👉 Input your choice [1-10]: ')
     if (arg == '1'):
